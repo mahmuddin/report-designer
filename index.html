@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>ReportBro Designer - Demo</title>
+    <!-- Styles used by the UI (relative to this file in src/) -->
+    <link rel="stylesheet" href="./main.css" />
+    <link rel="stylesheet" href="./quill.reportbro.css" />
+    <link rel="stylesheet" href="./toggle-switch.css" />
+    <link rel="stylesheet" href="./fonts/font_style.css" />
+    <link rel="stylesheet" href="./iconfonts/style.css" />
+    <style>
+      /* make container visible for demo */
+      html,
+      body {
+        height: 100%;
+        margin: 0;
+      }
+      #reportbro_container {
+        height: 800px;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="reportbro_container"></div>
+
+    <!-- Load project entry. This file uses ES imports, so use a bundler/dev server like Parcel/Vite/esbuild. -->
+    <script type="module" src="./main.js"></script>
+
+    <!-- Simple bootstrap: wait for the bundled script to attach ReportBro to window then create an instance -->
+    <script>
+      document.addEventListener("DOMContentLoaded", function () {
+        function tryInit() {
+          if (window.ReportBro) {
+            // create ReportBro instance in the container
+            try {
+              new window.ReportBro(
+                document.getElementById("reportbro_container")
+              );
+              console.log("ReportBro initialized");
+            } catch (e) {
+              console.error("Failed to initialize ReportBro:", e);
+            }
+          } else {
+            // not yet available, try again shortly
+            setTimeout(tryInit, 100);
+          }
+        }
+        tryInit();
+      });
+    </script>
+  </body>
+</html>
