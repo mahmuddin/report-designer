@@ -261,9 +261,9 @@ export default class DocumentPropertiesPanel extends PanelBase {
                     'div', { id: 'rbro_document_properties_watermark_error', class: 'rbroErrorMessage' })
             );
             if (this.rb.getProperty('showPlusFeaturesInfo')) {
-                const elInfoText = utils.createElement('div', { class: 'rbroInfo' });
-                elInfoText.innerHTML = this.rb.getLabel('plusFeatureInfo');
-                elFormField.append(elInfoText);
+                // const elInfoText = utils.createElement('div', { class: 'rbroInfo' });
+                // elInfoText.innerHTML = this.rb.getLabel('plusFeatureInfo');
+                // elFormField.append(elInfoText);
             }
             elDiv.append(elFormField);
             panel.append(elDiv);
