@@ -127,7 +127,11 @@
             // create ReportBro instance in the container
             try {
               reportBroInstance = new window.ReportBro(
-                document.getElementById("reportbro_container")
+                document.getElementById("reportbro_container"),
+                {
+                  reportServerUrl: 'http://localhost:8000/api/report/run',
+                  // ... properties lainnya
+                }
               );
               console.log("ReportBro initialized");
             } catch (e) {

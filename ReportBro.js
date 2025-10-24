@@ -95,7 +95,7 @@ export default class ReportBro {
             reportServerBasicAuth: null,
             reportServerHeaders: {},
             reportServerTimeout: 20000,
-            reportServerUrl: 'https://www.reportbro.com/report/run',
+            reportServerUrl: 'http://localhost:8000/api/report/run', // ganti dari https://www.reportbro.com/report/run
             reportServerUrlCrossDomain: false,
             requestCallback: null,
             saveCallback: null,
