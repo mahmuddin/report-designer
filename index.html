@@ -18,11 +18,46 @@
         margin: 0;
       }
       #reportbro_container {
-        height: 800px;
+        height: 100%;
+      }
+      .save-button-container {
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        padding: 0;
+        z-index: 2000;
+        pointer-events: none; /* allow clicks to pass through except button */
+      }
+      .save-button-container > button {
+        pointer-events: auto; /* make the button clickable */
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+        padding: 8px 16px;
+        background-color: #4caf50;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 14px;
       }
     </style>
   </head>
   <body>
+    <div class="save-button-container">
+      <input
+        id="loadFileInput"
+        type="file"
+        accept=".txt,.json"
+        style="display: none"
+      />
+      <button
+        id="loadButton"
+        style="margin-right: 8px; background-color: #337ab7"
+      >
+        Load
+      </button>
+      <button id="saveButton">Save Report</button>
+    </div>
+
     <div id="reportbro_container"></div>
 
     <!-- Load project entry. This file uses ES imports, so use a bundler/dev server like Parcel/Vite/esbuild. -->
@@ -30,12 +65,68 @@
 
     <!-- Simple bootstrap: wait for the bundled script to attach ReportBro to window then create an instance -->
     <script>
+      let reportBroInstance;
+
       document.addEventListener("DOMContentLoaded", function () {
+        // Add Load button behavior
+        const loadInput = document.getElementById("loadFileInput");
+        document
+          .getElementById("loadButton")
+          .addEventListener("click", function () {
+            loadInput.value = null;
+            loadInput.click();
+          });
+        loadInput.addEventListener("change", function (event) {
+          const file = event.target.files && event.target.files[0];
+          if (!file) return;
+          const reader = new FileReader();
+          reader.onload = function (e) {
+            try {
+              const json = JSON.parse(e.target.result);
+              if (reportBroInstance) {
+                reportBroInstance.load(json);
+                alert("Report loaded successfully!");
+              }
+            } catch (ex) {
+              alert("Failed to parse report file: " + ex.message);
+            }
+          };
+          reader.readAsText(file, "utf-8");
+        });
+
+        // Add save button click handler (download report as .txt)
+        document
+          .getElementById("saveButton")
+          .addEventListener("click", function () {
+            if (reportBroInstance) {
+              const reportDefinition = reportBroInstance.getReport();
+              const json = JSON.stringify(reportDefinition, null, 2);
+              const blob = new Blob([json], {
+                type: "text/plain;charset=utf-8",
+              });
+              const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
+              const filename = `report-${timestamp}.txt`;
+              if (window.navigator && window.navigator.msSaveOrOpenBlob) {
+                // IE/Edge
+                window.navigator.msSaveOrOpenBlob(blob, filename);
+              } else {
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement("a");
+                a.href = url;
+                a.download = filename;
+                document.body.appendChild(a);
+                a.click();
+                a.remove();
+                URL.revokeObjectURL(url);
+              }
+            }
+          });
+
         function tryInit() {
           if (window.ReportBro) {
             // create ReportBro instance in the container
             try {
-              new window.ReportBro(
+              reportBroInstance = new window.ReportBro(
                 document.getElementById("reportbro_container")
               );
               console.log("ReportBro initialized");
