@@ -44,23 +44,22 @@ Features
 
 Prerequisites
 
-- Python 3.x
+- Python 3.12
 - Virtual Environment (venv)
 
 Installation (server)
 
-1. Clone the server repository (or this repo if server is included):
+1. Navigate to the server directory:
 
 ```bash
-git clone <repository-url>
-cd reportbro-server
+cd server
 ```
 
 2. Create and activate a virtual environment:
 
 ```bash
 # Create virtual environment
-python -m venv venv
+py -3.12 -m venv venv
 
 # Activate virtual environment
 # For Windows PowerShell:
@@ -107,7 +106,6 @@ Running the Server
 2. Start the server:
 
 ```bash
-cd server
 python app.py
 ```
 
