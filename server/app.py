@@ -1,20 +1,16 @@
 #!/usr/bin/env python3
 """
-Refactored ReportBro local server (Flask) with richText fallback for open-source reportbro-lib
+Simplified ReportBro local server (Flask) without richText handling
 """
-from flask import Flask, request, jsonify, send_file, Response, make_response
+from flask import Flask, request, jsonify, send_file, make_response
 from flask_cors import CORS
 from reportbro import Report, ReportBroError
 from io import BytesIO
-from datetime import datetime, timedelta
+from datetime import datetime
 import threading
-import time
-import os
 import logging
 import uuid
 from typing import Dict, Any
-import re
-import html
 
 # ---------- Configuration ----------
 HOST = "0.0.0.0"
@@ -85,154 +81,6 @@ _cleaner_stop = threading.Event()
 _cleaner_thread = threading.Thread(target=background_cache_cleaner, args=(_cleaner_stop,), daemon=True)
 _cleaner_thread.start()
 
-# ---------- RichText Normalizer ----------
-def normalize_richtext_elements(report_definition: dict) -> dict:
-    """Convert richText fields into plain text (for OSS reportbro-lib)."""
-    if not isinstance(report_definition, dict):
-        return report_definition
-
-    doc_elements = report_definition.get("docElements", [])
-    for el in doc_elements:
-        try:
-            if el.get("richText") or el.get("richTextHtml") or el.get("richTextContent"):
-                raw_html = el.get("richTextHtml") or ""
-
-                if not raw_html and el.get("richTextContent"):
-                    rtc = el.get("richTextContent")
-                    if isinstance(rtc, dict) and rtc.get("ops"):
-                        # detect attributes from delta
-                        align_val = None
-                        for op in rtc["ops"]:
-                            attrs = op.get("attributes") or {}
-                            if attrs.get("bold"):
-                                el["bold"] = True
-                            if attrs.get("italic"):
-                                el["italic"] = True
-                            if attrs.get("underline"):
-                                el["underline"] = True
-                            if attrs.get("strike"):
-                                el["strikethrough"] = True
-                            if not el.get("link") and isinstance(attrs.get("link"), str):
-                                el["link"] = attrs.get("link")
-                            if not el.get("textColor") and isinstance(attrs.get("color"), str):
-                                el["textColor"] = attrs.get("color")
-                            if not el.get("backgroundColor") and isinstance(attrs.get("background"), str):
-                                el["backgroundColor"] = attrs.get("background")
-                            if not el.get("font") and isinstance(attrs.get("font"), str):
-                                f = attrs.get("font").lower()
-                                if f in ("helvetica", "times", "courier"):
-                                    el["font"] = {"helvetica": "Helvetica", "times": "Times New Roman", "courier": "Courier"}[f]
-                                else:
-                                    el["font"] = attrs.get("font")
-                            if not el.get("fontSize") and isinstance(attrs.get("size"), str):
-                                size = attrs.get("size")
-                                m = re.match(r"^(\d+)(px|pt)$", size)
-                                if m:
-                                    num = int(m.group(1))
-                                    unit = m.group(2)
-                                    el["fontSize"] = int(round(num * 1.333)) if unit == "pt" else num
-                            if isinstance(op.get("insert"), str) and op.get("insert", "").endswith("\n"):
-                                if isinstance(attrs.get("align"), str):
-                                    align_val = attrs.get("align").lower()
-                        if align_val in ("left", "center", "right", "justify"):
-                            el["horizontalAlignment"] = align_val
-
-                        # build minimal HTML from delta text for plain conversion
-                        text_parts = []
-                        for op in rtc["ops"]:
-                            v = op.get("insert")
-                            if isinstance(v, str):
-                                text_parts.append(v)
-                        raw_html = "<p>" + "</p><p>".join([html.escape(p) for p in text_parts]) + "</p>"
-
-                s = raw_html or el.get("content", "")
-                s = s.replace("\r", "")
-
-                # global detection from HTML
-                lower = s.lower()
-                if "<b" in lower or "<strong" in lower:
-                    el["bold"] = True
-                if "<i" in lower or "<em" in lower:
-                    el["italic"] = True
-                if "<u" in lower:
-                    el["underline"] = True
-                if "<s" in lower or "<strike" in lower or "<del" in lower or "line-through" in lower:
-                    el["strikethrough"] = True
-
-                # alignment via class or style
-                if "ql-align-center" in lower:
-                    el["horizontalAlignment"] = "center"
-                elif "ql-align-right" in lower:
-                    el["horizontalAlignment"] = "right"
-                elif "ql-align-justify" in lower:
-                    el["horizontalAlignment"] = "justify"
-                else:
-                    m_align = re.search(r"text-align\s*:\s*(left|right|center|justify)", lower)
-                    if m_align:
-                        el["horizontalAlignment"] = m_align.group(1)
-
-                # first link
-                if not el.get("link"):
-                    m_link = re.search(r"<a[^>]+href=\"([^\"]+)\"", s, flags=re.IGNORECASE)
-                    if not m_link:
-                        m_link = re.search(r"<a[^>]+href='([^']+)'", s, flags=re.IGNORECASE)
-                    if m_link:
-                        el["link"] = m_link.group(1)
-
-                # color & background
-                if not el.get("textColor"):
-                    m_color = re.search(r"color\s*:\s*(#[0-9a-f]{3,8}|rgb\([^\)]+\))", lower)
-                    if m_color:
-                        el["textColor"] = m_color.group(1)
-                if not el.get("backgroundColor"):
-                    m_bg = re.search(r"background-color\s*:\s*(#[0-9a-f]{3,8}|rgb\([^\)]+\))", lower)
-                    if m_bg:
-                        el["backgroundColor"] = m_bg.group(1)
-
-                # font family via class or style
-                if not el.get("font"):
-                    if "ql-font-helvetica" in lower:
-                        el["font"] = "Helvetica"
-                    elif "ql-font-times" in lower:
-                        el["font"] = "Times New Roman"
-                    elif "ql-font-courier" in lower:
-                        el["font"] = "Courier"
-                    else:
-                        m_ff = re.search(r"font-family\s*:\s*([^;]+)", s, flags=re.IGNORECASE)
-                        if m_ff:
-                            ff = m_ff.group(1).split(",")[0].strip().strip("'\"")
-                            el["font"] = ff
-
-                # font size
-                if not el.get("fontSize"):
-                    m_fs = re.search(r"font-size\s*:\s*(\d+)(px|pt)", s, flags=re.IGNORECASE)
-                    if m_fs:
-                        num = int(m_fs.group(1))
-                        unit = m_fs.group(2).lower()
-                        el["fontSize"] = int(round(num * 1.333)) if unit == "pt" else num
-
-                # strip tags to plain text
-                s = re.sub(r"(?i)</p\s*>", "\n", s)
-                s = re.sub(r"(?i)<br\s*/?>", "\n", s)
-                s = re.sub(r"(?i)<li\s*>", "• ", s)
-                s = re.sub(r"(?i)</li\s*>", "\n", s)
-                text = re.sub(r"<[^>]+>", "", s)
-                text = html.unescape(text)
-                text = re.sub(r"\n{3,}", "\n\n", text)
-                text = text.strip()
-
-                el["content"] = text
-                el["richText"] = False
-                el.pop("richTextHtml", None)
-                el.pop("richTextContent", None)
-
-        except Exception as ex:
-            logging.warning("Failed to normalize element %s: %s", el.get("id"), ex)
-            continue
-
-    return report_definition
-
-
 # ---------- PDF/XLSX generation ----------
 def generate_pdf_from_definition(report_definition: dict, report_data: dict) -> bytes:
     report = Report(report_definition, report_data)
@@ -266,9 +114,6 @@ def generate_report():
         logging.info("Received generate request. format=%s isTestData=%s", output_format, is_test_data)
         if not report_definition:
             return jsonify({"errors": [{"msg": "No report definition provided"}]}), 400
-
-        # 🧩 Normalize rich text for open-source engine
-        normalize_richtext_elements(report_definition)
 
         if output_format == "pdf":
             pdf_bytes = generate_pdf_from_definition(report_definition, report_data)
@@ -359,7 +204,7 @@ def route_cache_info():
 def route_test():
     return jsonify({
         "status": "ok",
-        "message": "ReportBro server with richText normalizer is running",
+        "message": "ReportBro server is running (no richText normalizer)",
         "version": "reportbro-lib",
         "cache_size": len(report_cache)
     })
@@ -372,7 +217,7 @@ def shutdown_background_cleaner():
 
 if __name__ == "__main__":
     logging.info("=" * 60)
-    logging.info("Starting ReportBro Server with richText normalizer")
+    logging.info("Starting ReportBro Server (no richText normalizer)")
     logging.info("=" * 60)
     logging.info("Server URL: http://%s:%s", HOST, PORT)
     logging.info("=" * 60)

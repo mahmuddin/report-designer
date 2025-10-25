@@ -16,7 +16,7 @@ import TableTextElement from '../elements/TableTextElement';
 import TextElement from '../elements/TextElement';
 import PopupWindow from '../PopupWindow';
 import * as utils from '../utils';
-import Quill from 'quill';
+
 import autosize from 'autosize';
 
 /**
@@ -34,22 +34,13 @@ export default class DocElementPanel extends PanelBase {
             },
             'content': {
                 'type': SetValueCmd.type.text,
-                'fieldId': 'content',
-                'visibleIf': '!richText'
+                'fieldId': 'content'
             },
-            'richText': {
-                'type': SetValueCmd.type.checkbox,
-                'fieldId': 'rich_text',
-            },
-            'richTextContent': {
-                'type': SetValueCmd.type.richText,
-                'fieldId': 'rich_text_content',
-                'visibleIf': 'richText'
-            },
+
+
             'eval': {
                 'type': SetValueCmd.type.checkbox,
-                'fieldId': 'eval',
-                'visibleIf': '!richText'
+                'fieldId': 'eval'
             },
             'dataSource': {
                 'type': SetValueCmd.type.text,
@@ -199,32 +190,28 @@ export default class DocElementPanel extends PanelBase {
                 'rowId': 'rbro_doc_element_textstyle_row',
                 'singleRowProperty': false,
                 'rowProperties': ['bold', 'italic', 'underline', 'strikethrough'],
-                'section': 'style',
-                'visibleIf': '!richText'
+                'section': 'style'
             },
             'italic': {
                 'type': SetValueCmd.type.button,
                 'fieldId': 'italic',
                 'rowId': 'rbro_doc_element_textstyle_row',
                 'singleRowProperty': false,
-                'section': 'style',
-                'visibleIf': '!richText'
+                'section': 'style'
             },
             'underline': {
                 'type': SetValueCmd.type.button,
                 'fieldId': 'underline',
                 'rowId': 'rbro_doc_element_textstyle_row',
                 'singleRowProperty': false,
-                'section': 'style',
-                'visibleIf': '!richText'
+                'section': 'style'
             },
             'strikethrough': {
                 'type': SetValueCmd.type.button,
                 'fieldId': 'strikethrough',
                 'rowId': 'rbro_doc_element_textstyle_row',
                 'singleRowProperty': false,
-                'section': 'style',
-                'visibleIf': '!richText'
+                'section': 'style'
             },
             'horizontalAlignment': {
                 'type': SetValueCmd.type.buttonGroup,
@@ -233,7 +220,7 @@ export default class DocElementPanel extends PanelBase {
                 'singleRowProperty': false,
                 'rowProperties': ['horizontalAlignment', 'verticalAlignment'],
                 'section': 'style',
-                'visibleIf': "(docElementType != 'bar_code' && !richText) || (docElementType == 'bar_code' && rotate == false)"
+                'visibleIf': "docElementType != 'bar_code' || (docElementType == 'bar_code' && rotate == false)"
             },
             'verticalAlignment': {
                 'type': SetValueCmd.type.buttonGroup,
@@ -247,8 +234,7 @@ export default class DocElementPanel extends PanelBase {
                 'type': SetValueCmd.type.color,
                 'allowEmpty': false,
                 'fieldId': 'text_color',
-                'section': 'style',
-                'visibleIf': '!richText'
+                'section': 'style'
             },
             'backgroundColor': {
                 'type': SetValueCmd.type.color,
@@ -269,8 +255,7 @@ export default class DocElementPanel extends PanelBase {
                 'singleRowProperty': false,
                 'rowProperties': ['font', 'fontSize'],
                 'section': 'style',
-                'allowEmpty': false,
-                'visibleIf': '!richText'
+                'allowEmpty': false
             },
             'fontSize': {
                 'type': SetValueCmd.type.select,
@@ -278,8 +263,7 @@ export default class DocElementPanel extends PanelBase {
                 'rowId': 'rbro_doc_element_font_row',
                 'singleRowProperty': false,
                 'section': 'style',
-                'allowEmpty': false,
-                'visibleIf': '!richText'
+                'allowEmpty': false
             },
             'lineSpacing': {
                 'type': SetValueCmd.type.select,
@@ -425,14 +409,12 @@ export default class DocElementPanel extends PanelBase {
             'pattern': {
                 'type': SetValueCmd.type.text,
                 'fieldId': 'pattern',
-                'section': 'print',
-                'visibleIf': '!richText'
+                'section': 'print'
             },
             'link': {
                 'type': SetValueCmd.type.text,
                 'fieldId': 'link',
-                'section': 'print',
-                'visibleIf': '!richText'
+                'section': 'print'
             },
             'cs_condition': {
                 'type': SetValueCmd.type.text,
@@ -457,32 +439,28 @@ export default class DocElementPanel extends PanelBase {
                 'rowId': 'rbro_doc_element_cs_textstyle_row',
                 'singleRowProperty': false,
                 'rowProperties': ['cs_bold', 'cs_italic', 'cs_underline', 'cs_strikethrough'],
-                'section': 'cs_style',
-                'visibleIf': '!richText'
+                'section': 'cs_style'
             },
             'cs_italic': {
                 'type': SetValueCmd.type.button,
                 'fieldId': 'cs_italic',
                 'rowId': 'rbro_doc_element_cs_textstyle_row',
                 'singleRowProperty': false,
-                'section': 'cs_style',
-                'visibleIf': '!richText'
+                'section': 'cs_style'
             },
             'cs_underline': {
                 'type': SetValueCmd.type.button,
                 'fieldId': 'cs_underline',
                 'rowId': 'rbro_doc_element_cs_textstyle_row',
                 'singleRowProperty': false,
-                'section': 'cs_style',
-                'visibleIf': '!richText'
+                'section': 'cs_style'
             },
             'cs_strikethrough': {
                 'type': SetValueCmd.type.button,
                 'fieldId': 'cs_strikethrough',
                 'rowId': 'rbro_doc_element_cs_textstyle_row',
                 'singleRowProperty': false,
-                'section': 'cs_style',
-                'visibleIf': '!richText'
+                'section': 'cs_style'
             },
             'cs_horizontalAlignment': {
                 'type': SetValueCmd.type.buttonGroup,
@@ -490,8 +468,7 @@ export default class DocElementPanel extends PanelBase {
                 'rowId': 'rbro_doc_element_cs_alignment_row',
                 'singleRowProperty': false,
                 'rowProperties': ['cs_horizontalAlignment', 'cs_verticalAlignment'],
-                'section': 'cs_style',
-                'visibleIf': '!richText'
+                'section': 'cs_style'
             },
             'cs_verticalAlignment': {
                 'type': SetValueCmd.type.buttonGroup,
@@ -504,8 +481,7 @@ export default class DocElementPanel extends PanelBase {
                 'type': SetValueCmd.type.color,
                 'allowEmpty': false,
                 'fieldId': 'cs_text_color',
-                'section': 'cs_style',
-                'visibleIf': '!richText'
+                'section': 'cs_style'
             },
             'cs_backgroundColor': {
                 'type': SetValueCmd.type.color,
@@ -520,8 +496,7 @@ export default class DocElementPanel extends PanelBase {
                 'singleRowProperty': false,
                 'rowProperties': ['cs_font', 'cs_fontSize'],
                 'section': 'cs_style',
-                'allowEmpty': false,
-                'visibleIf': '!richText'
+                'allowEmpty': false
             },
             'cs_fontSize': {
                 'type': SetValueCmd.type.select,
@@ -529,8 +504,7 @@ export default class DocElementPanel extends PanelBase {
                 'rowId': 'rbro_doc_element_cs_font_row',
                 'singleRowProperty': false,
                 'section': 'cs_style',
-                'allowEmpty': false,
-                'visibleIf': '!richText'
+                'allowEmpty': false
             },
             'cs_lineSpacing': {
                 'type': SetValueCmd.type.select,
@@ -654,11 +628,7 @@ export default class DocElementPanel extends PanelBase {
             }
         };
 
-        if (!rb.getProperty('showPlusFeatures')) {
-            // remove all properties of PLUS version
-            delete this.propertyDescriptors['richText'];
-            delete this.propertyDescriptors['richTextContent'];
-        }
+
 
         super.initVisibleIfFields();
     }
@@ -770,126 +740,7 @@ export default class DocElementPanel extends PanelBase {
         elDiv.append(elFormField);
         panel.append(elDiv);
 
-        // Rich-Text-Editor
-        if (this.rb.getProperty('showPlusFeatures')) {
-            elDiv = utils.createElement('div', { id: 'rbro_doc_element_rich_text_row', class: 'rbroFormRow' });
-            utils.appendLabel(elDiv, this.rb.getLabel('docElementRichText'), 'rbro_doc_element_rich_text');
-            elFormField = utils.createElement('div', { class: 'rbroFormField' });
-            let elRichTextLabel = utils.createElement('label', { class: 'switch-light switch-material' });
-            let elRichText = utils.createElement('input', { id: 'rbro_doc_element_rich_text', type: 'checkbox' });
-            elRichText.addEventListener('change', (event) => {
-                let richTextChecked = elRichText.checked;
-                let cmdGroup = new CommandGroupCmd('Set value', this.rb);
-                let selectedObjects = this.rb.getSelectedObjects();
-                for (let i=selectedObjects.length - 1; i >= 0; i--) {
-                    let obj = selectedObjects[i];
-                    cmdGroup.addSelection(obj.getId());
-                    cmdGroup.addCommand(new SetValueCmd(
-                        obj.getId(), 'richText', richTextChecked, SetValueCmd.type.checkbox, this.rb));
-                }
-                if (!cmdGroup.isEmpty()) {
-                    this.rb.executeCommand(cmdGroup);
-                }
-            });
-            elRichTextLabel.append(elRichText);
-            let elRichTextSpan = utils.createElement('span');
-            elRichTextSpan.append(utils.createElement('span'));
-            elRichTextSpan.append(utils.createElement('span'));
-            elRichTextSpan.append(utils.createElement('a'));
-            elRichTextLabel.append(elRichTextSpan);
-            elFormField.append(elRichTextLabel);
-            elFormField.append(
-                utils.createElement('div', { id: 'rbro_doc_element_rich_text_error', class: 'rbroErrorMessage' })
-            );
-            if (this.rb.getProperty('showPlusFeaturesInfo')) {
-                // const elInfoText = utils.createElement('div', { class: 'rbroInfo' });
-                // elInfoText.innerHTML = this.rb.getLabel('plusFeatureInfo');
-                // elFormField.append(elInfoText);
-            }
-            elDiv.append(elFormField);
-            panel.append(elDiv);
 
-            elDiv = utils.createElement(
-                'div', {
-                    id: 'rbro_doc_element_rich_text_content_row',
-                    class: 'rbroFormRow rbroRichTextEditor rbroHidden'
-                });
-
-            let colors = this.rb.getProperty('colors');
-            const elRichTextColor = utils.createElement(
-                'select', { class: 'ql-color', title: this.rb.getLabel('styleTextColor') });
-            const elRichTextBackgroundColor = utils.createElement(
-                'select', { class: 'ql-background', title: this.rb.getLabel('styleBackgroundColor') });
-            for (let color of colors) {
-                elRichTextColor.append(utils.createElement('option', { value: color }, color));
-                elRichTextBackgroundColor.append(utils.createElement('option', { value: color }, color));
-            }
-            elRichTextColor.append(utils.createElement('option', { value: 'clear-color' }));
-            elRichTextBackgroundColor.append(utils.createElement('option', { value: 'clear-color' }));
-
-            const elRichTextFont = utils.createElement('select', { class: 'ql-font' });
-            const defaultFont = this.rb.getProperty('defaultFont');
-            for (let font of this.rb.getFonts()) {
-                const props = { value: font.value };
-                if (font.value === defaultFont) {
-                    props.selected = 'selected';
-                }
-                elRichTextFont.append(utils.createElement('option', props, font.name));
-            }
-            const elRichTextFontSize = utils.createElement('select', { class: 'ql-size' });
-            for (let size of this.rb.getProperty('fontSizes')) {
-                const props = { value: size + 'px' };
-                if (size === 12) {
-                    props.selected = 'selected';
-                }
-                elRichTextFontSize.append(utils.createElement('option', props, size + 'pt'));
-            }
-
-            const elToolbar = utils.createElement('div', { id: 'rbro_doc_element_rich_text_content_toolbar' });
-            let elToolbarBlock = utils.createElement('span', { class: 'ql-formats' });
-            elToolbarBlock.append(
-                utils.createElement('button', { class: 'ql-bold', title: this.rb.getLabel('styleBold') }));
-            elToolbarBlock.append(
-                utils.createElement('button', { class: 'ql-italic', title: this.rb.getLabel('styleItalic') }));
-            elToolbarBlock.append(
-                utils.createElement('button', { class: 'ql-underline', title: this.rb.getLabel('styleUnderline') }));
-            elToolbarBlock.append(
-                utils.createElement('button', { class: 'ql-strike', title: this.rb.getLabel('styleStrikethrough') }));
-            elToolbar.append(elToolbarBlock);
-
-            elToolbarBlock = utils.createElement('span', { class: 'ql-formats' });
-            elToolbarBlock.append(utils.createElement('button', { class: 'ql-link' }));
-            elToolbar.append(elToolbarBlock);
-
-            elToolbarBlock = utils.createElement('span', { class: 'ql-formats' });
-            elToolbarBlock.append(
-                utils.createElement('select', { class: 'ql-align', title: this.rb.getLabel('styleAlignment') }));
-            elToolbar.append(elToolbarBlock);
-
-            elToolbarBlock = utils.createElement('span', { class: 'ql-formats' });
-            elToolbarBlock.append(elRichTextColor);
-            elToolbarBlock.append(elRichTextBackgroundColor);
-            elToolbar.append(elToolbarBlock);
-
-            elToolbar.append(elRichTextFont);
-            elToolbar.append(elRichTextFontSize);
-
-            elToolbar.append(utils.createElement(
-                'div', {
-                    id: 'rbro_doc_element_rich_text_content_toolbar_parameter',
-                    class: 'rbroButton rbroRoundButton rbroIcon-select'
-                })
-            );
-            elDiv.append(elToolbar);
-
-            let elRichTextContent = utils.createElement('div', { id: 'rbro_doc_element_rich_text_content' });
-            elDiv.append(elRichTextContent);
-            elDiv.append(
-                utils.createElement(
-                    'div', { id: 'rbro_doc_element_rich_text_content_error', class: 'rbroErrorMessage' })
-            );
-            panel.append(elDiv);
-        }
 
         elDiv = utils.createElement('div', { id: 'rbro_doc_element_eval_row', class: 'rbroFormRow rbroHidden' });
         utils.appendLabel(elDiv, this.rb.getLabel('docElementEval'), 'rbro_doc_element_eval');
@@ -2431,9 +2282,7 @@ export default class DocElementPanel extends PanelBase {
 
         document.getElementById('rbro_detail_panel').append(panel);
 
-        if (this.rb.getProperty('showPlusFeatures')) {
-            this.setupRichText();
-        }
+
     }
 
     renderStyleSelect() {
@@ -2453,99 +2302,7 @@ export default class DocElementPanel extends PanelBase {
         utils.populateStyleSelect(this.elCsStyle, styleType, null, this.rb);
     }
 
-    setupRichText() {
-        // add protocol to link if not present, by default quill discards the link if there is not protocol
-        let Link = Quill.import('formats/link');
-        let sanitizeLinkSuper = Link.sanitize;
-        Link.sanitize = function customSanitizeLinkInput(linkValueInput) {
-            let val = linkValueInput;
-            if (/^\w+:/.test(val) || val.startsWith('${')) {
-                // do nothing, user is already using a custom protocol or a parameter value
-                return val;
-            } else if (!/^https?:/.test(val)) {
-                // add missing http protocol to url
-                if (val.startsWith('/')) {
-                    val = "http:" + val;
-                } else {
-                    val = "http://" + val;
-                }
-            }
-            return sanitizeLinkSuper.call(this, val);
-        };
 
-        document.getElementById('rbro_doc_element_rich_text_content_toolbar_parameter')
-            .addEventListener('click', (event) => {
-                let selectedObjects = this.rb.getSelectedObjects();
-                // data source parameters are not shown in case multiple objects are selected
-                let selectedObject = selectedObjects.length === 1 ? selectedObjects[0] : null;
-
-                this.rb.getPopupWindow().show(
-                    this.rb.getParameterItems(selectedObject, null), null,
-                    'rbro_doc_element_rich_text_content', 'richTextContent',
-                    PopupWindow.type.parameterAppend, this.quill);
-            });
-
-        let fontFormat = Quill.import('formats/font');
-        let richTextFonts = [];
-        for (let font of this.rb.getFonts()) {
-            richTextFonts.push(font.value);
-        }
-        fontFormat.whitelist = richTextFonts;
-        Quill.register(fontFormat, true);
-
-        let fontSizeStyle = Quill.import('attributors/style/size');
-        let fontSizes = this.rb.getProperty('fontSizes');
-        let richTextFontSize = [];
-        for (let fontSize of fontSizes) {
-            richTextFontSize.push(fontSize + 'px');
-        }
-        fontSizeStyle.whitelist = richTextFontSize;
-        Quill.register(fontSizeStyle, true);
-
-        let quill = new Quill('#rbro_doc_element_rich_text_content', {
-            modules: {
-                toolbar: '#rbro_doc_element_rich_text_content_toolbar'
-            },
-            placeholder: '',
-            theme: 'snow'  // or 'bubble'
-        });
-
-        // handle additional "color" to clear current color format
-        quill.getModule('toolbar').addHandler('color', (value) => {
-            if (value === 'clear-color') {
-                quill.format('color', '');
-            } else {
-                quill.format('color', value);
-            }
-        });
-        quill.getModule('toolbar').addHandler('background', (value) => {
-            if (value === 'clear-color') {
-                quill.format('background', '');
-            } else {
-                quill.format('background', value);
-            }
-        });
-
-        let rb = this.rb;
-        quill.on('text-change', function(delta, oldDelta, source) {
-            let content = quill.getContents();
-            let html = quill.root.innerHTML;
-            let cmdGroup = new CommandGroupCmd('Set value', rb);
-            let selectedObjects = rb.getSelectedObjects();
-            for (let i=selectedObjects.length - 1; i >= 0; i--) {
-                let obj = selectedObjects[i];
-                cmdGroup.addSelection(obj.getId());
-                cmdGroup.addCommand(new SetValueCmd(
-                    obj.getId(), 'richTextContent', content, SetValueCmd.type.richText, rb));
-                cmdGroup.addCommand(new SetValueCmd(
-                    obj.getId(), 'richTextHtml', html, SetValueCmd.type.text, rb));
-            }
-            if (!cmdGroup.isEmpty()) {
-                rb.executeCommand(cmdGroup);
-            }
-        });
-        this.quill = quill;
-    }
 
     /**
      * Is called when the ReportBro instance is deleted and should be used
