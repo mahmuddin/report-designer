@@ -97,10 +97,47 @@ def normalize_richtext_elements(report_definition: dict) -> dict:
             if el.get("richText") or el.get("richTextHtml") or el.get("richTextContent"):
                 raw_html = el.get("richTextHtml") or ""
 
-                # Handle Quill delta if HTML not available
                 if not raw_html and el.get("richTextContent"):
                     rtc = el.get("richTextContent")
                     if isinstance(rtc, dict) and rtc.get("ops"):
+                        # detect attributes from delta
+                        align_val = None
+                        for op in rtc["ops"]:
+                            attrs = op.get("attributes") or {}
+                            if attrs.get("bold"):
+                                el["bold"] = True
+                            if attrs.get("italic"):
+                                el["italic"] = True
+                            if attrs.get("underline"):
+                                el["underline"] = True
+                            if attrs.get("strike"):
+                                el["strikethrough"] = True
+                            if not el.get("link") and isinstance(attrs.get("link"), str):
+                                el["link"] = attrs.get("link")
+                            if not el.get("textColor") and isinstance(attrs.get("color"), str):
+                                el["textColor"] = attrs.get("color")
+                            if not el.get("backgroundColor") and isinstance(attrs.get("background"), str):
+                                el["backgroundColor"] = attrs.get("background")
+                            if not el.get("font") and isinstance(attrs.get("font"), str):
+                                f = attrs.get("font").lower()
+                                if f in ("helvetica", "times", "courier"):
+                                    el["font"] = {"helvetica": "Helvetica", "times": "Times New Roman", "courier": "Courier"}[f]
+                                else:
+                                    el["font"] = attrs.get("font")
+                            if not el.get("fontSize") and isinstance(attrs.get("size"), str):
+                                size = attrs.get("size")
+                                m = re.match(r"^(\d+)(px|pt)$", size)
+                                if m:
+                                    num = int(m.group(1))
+                                    unit = m.group(2)
+                                    el["fontSize"] = int(round(num * 1.333)) if unit == "pt" else num
+                            if isinstance(op.get("insert"), str) and op.get("insert", "").endswith("\n"):
+                                if isinstance(attrs.get("align"), str):
+                                    align_val = attrs.get("align").lower()
+                        if align_val in ("left", "center", "right", "justify"):
+                            el["horizontalAlignment"] = align_val
+
+                        # build minimal HTML from delta text for plain conversion
                         text_parts = []
                         for op in rtc["ops"]:
                             v = op.get("insert")
@@ -111,13 +148,7 @@ def normalize_richtext_elements(report_definition: dict) -> dict:
                 s = raw_html or el.get("content", "")
                 s = s.replace("\r", "")
 
-                # Basic HTML to text conversion
-                s = re.sub(r"(?i)</p\s*>", "\n", s)
-                s = re.sub(r"(?i)<br\s*/?>", "\n", s)
-                s = re.sub(r"(?i)<li\s*>", "• ", s)
-                s = re.sub(r"(?i)</li\s*>", "\n", s)
-
-                # Detect styling globally
+                # global detection from HTML
                 lower = s.lower()
                 if "<b" in lower or "<strong" in lower:
                     el["bold"] = True
@@ -125,8 +156,66 @@ def normalize_richtext_elements(report_definition: dict) -> dict:
                     el["italic"] = True
                 if "<u" in lower:
                     el["underline"] = True
+                if "<s" in lower or "<strike" in lower or "<del" in lower or "line-through" in lower:
+                    el["strikethrough"] = True
 
-                # Strip all remaining tags
+                # alignment via class or style
+                if "ql-align-center" in lower:
+                    el["horizontalAlignment"] = "center"
+                elif "ql-align-right" in lower:
+                    el["horizontalAlignment"] = "right"
+                elif "ql-align-justify" in lower:
+                    el["horizontalAlignment"] = "justify"
+                else:
+                    m_align = re.search(r"text-align\s*:\s*(left|right|center|justify)", lower)
+                    if m_align:
+                        el["horizontalAlignment"] = m_align.group(1)
+
+                # first link
+                if not el.get("link"):
+                    m_link = re.search(r"<a[^>]+href=\"([^\"]+)\"", s, flags=re.IGNORECASE)
+                    if not m_link:
+                        m_link = re.search(r"<a[^>]+href='([^']+)'", s, flags=re.IGNORECASE)
+                    if m_link:
+                        el["link"] = m_link.group(1)
+
+                # color & background
+                if not el.get("textColor"):
+                    m_color = re.search(r"color\s*:\s*(#[0-9a-f]{3,8}|rgb\([^\)]+\))", lower)
+                    if m_color:
+                        el["textColor"] = m_color.group(1)
+                if not el.get("backgroundColor"):
+                    m_bg = re.search(r"background-color\s*:\s*(#[0-9a-f]{3,8}|rgb\([^\)]+\))", lower)
+                    if m_bg:
+                        el["backgroundColor"] = m_bg.group(1)
+
+                # font family via class or style
+                if not el.get("font"):
+                    if "ql-font-helvetica" in lower:
+                        el["font"] = "Helvetica"
+                    elif "ql-font-times" in lower:
+                        el["font"] = "Times New Roman"
+                    elif "ql-font-courier" in lower:
+                        el["font"] = "Courier"
+                    else:
+                        m_ff = re.search(r"font-family\s*:\s*([^;]+)", s, flags=re.IGNORECASE)
+                        if m_ff:
+                            ff = m_ff.group(1).split(",")[0].strip().strip("'\"")
+                            el["font"] = ff
+
+                # font size
+                if not el.get("fontSize"):
+                    m_fs = re.search(r"font-size\s*:\s*(\d+)(px|pt)", s, flags=re.IGNORECASE)
+                    if m_fs:
+                        num = int(m_fs.group(1))
+                        unit = m_fs.group(2).lower()
+                        el["fontSize"] = int(round(num * 1.333)) if unit == "pt" else num
+
+                # strip tags to plain text
+                s = re.sub(r"(?i)</p\s*>", "\n", s)
+                s = re.sub(r"(?i)<br\s*/?>", "\n", s)
+                s = re.sub(r"(?i)<li\s*>", "• ", s)
+                s = re.sub(r"(?i)</li\s*>", "\n", s)
                 text = re.sub(r"<[^>]+>", "", s)
                 text = html.unescape(text)
                 text = re.sub(r"\n{3,}", "\n\n", text)
